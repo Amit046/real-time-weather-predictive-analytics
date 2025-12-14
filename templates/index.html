@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeatherML Pro - AI Weather Intelligence</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: #000000;
+            color: #00ff88;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated Grid Background */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+                linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridScroll 20s linear infinite;
+            z-index: 0;
+        }
+
+        @keyframes gridScroll {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        /* Glowing Orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.3;
+            animation: float 15s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        .orb1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #00ff88, transparent);
+            top: -200px;
+            left: -200px;
+        }
+
+        .orb2 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, #00ffff, transparent);
+            bottom: -150px;
+            right: -150px;
+            animation-delay: -7s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(50px, 50px) scale(1.1); }
+        }
+
+        /* Top Bar */
+        .top-bar {
+            position: relative;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid rgba(0, 255, 136, 0.3);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.2);
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8em;
+            font-weight: 900;
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #00ff88, #00ffff);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            animation: pulse 2s ease-in-out infinite;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.6);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #00ff88;
+            border-radius: 50%;
+            animation: blink 2s ease-in-out infinite;
+            box-shadow: 0 0 10px #00ff88;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .nav-btn {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 255, 255, 0.2));
+            border: 2px solid #00ff88;
+            color: #00ff88;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-btn:hover {
+            background: #00ff88;
+            color: #000;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.8);
+            transform: translateY(-2px);
+        }
+
+        /* Main Container */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        /* Search Section */
+        .search-section {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.2);
+        }
+
+        .search-wrapper {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        input {
+            flex: 1;
+            padding: 15px 25px;
+            background: rgba(0, 255, 136, 0.05);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 10px;
+            color: #00ff88;
+            font-size: 1.1em;
+            font-family: 'Rajdhani', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        input::placeholder {
+            color: rgba(0, 255, 136, 0.4);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .search-btn {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #00ff88, #00ffff);
+            border: none;
+            border-radius: 10px;
+            color: #000;
+            font-weight: 700;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .search-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.6);
+        }
+
+        .city-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .city-chip {
+            padding: 12px;
+            background: rgba(0, 255, 136, 0.05);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .city-chip:hover {
+            background: rgba(0, 255, 136, 0.2);
+            border-color: #00ff88;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.4);
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .data-card {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 20px;
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .data-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 255, 136, 0.1) 0%, transparent 70%);
+            animation: rotate 10s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .data-card:hover {
+            border-color: #00ff88;
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.4);
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-icon {
+            font-size: 2em;
+            filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.8));
+        }
+
+        .card-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .card-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .big-number {
+            font-size: 3.5em;
+            font-weight: 700;
+            font-family: 'Orbitron', sans-serif;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+            margin: 15px 0;
+        }
+
+        .metric-label {
+            color: rgba(0, 255, 136, 0.6);
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Chart Section */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            transition: all 0.4s ease;
+        }
+
+        .chart-card:hover {
+            border-color: #00ff88;
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.3);
+        }
+
+        .chart-card.full {
+            grid-column: 1 / -1;
+        }
+
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        .chart-container.large {
+            height: 400px;
+        }
+
+        /* Loading Animation */
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(0, 255, 136, 0.2);
+            border-top-color: #00ff88;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 50px auto;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #00ff88, #00ffff);
+            border-radius: 10px;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="logo">
+            <div class="logo-icon">⚡</div>
+            <span>WEATHERML</span>
+        </div>
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-dot"></span>
+                <span>SYSTEM ONLINE</span>
+            </div>
+            <div class="status-item">
+                <span>🤖 ML ACTIVE</span>
+            </div>
+            <a href="/dashboard" class="nav-btn">Analytics</a>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="search-wrapper">
+                <input type="text" id="cityInput" placeholder="ENTER CITY NAME...">
+                <button class="search-btn" onclick="searchWeather()">SCAN</button>
+            </div>
+            <div class="city-grid">
+                <div class="city-chip" onclick="selectCity('Delhi')">Delhi</div>
+                <div class="city-chip" onclick="selectCity('Mumbai')">Mumbai</div>
+                <div class="city-chip" onclick="selectCity('Bangalore')">Bangalore</div>
+                <div class="city-chip" onclick="selectCity('Chennai')">Chennai</div>
+                <div class="city-chip" onclick="selectCity('Kolkata')">Kolkata</div>
+                <div class="city-chip" onclick="selectCity('Hyderabad')">Hyderabad</div>
+            </div>
+        </div>
+
+        <!-- Weather Display -->
+        <div id="weatherDisplay" class="hidden"></div>
+
+        <!-- Charts Display -->
+        <div id="chartsDisplay" class="hidden"></div>
+    </div>
+
+    <script>
+        let currentWeatherData = null;
+
+        function selectCity(city) {
+            document.getElementById('cityInput').value = city;
+            searchWeather();
+        }
+
+        async function searchWeather() {
+            const city = document.getElementById('cityInput').value || 'Delhi';
+            const weatherDisplay = document.getElementById('weatherDisplay');
+            const chartsDisplay = document.getElementById('chartsDisplay');
+            
+            weatherDisplay.innerHTML = '<div class="loader"></div>';
+            weatherDisplay.classList.remove('hidden');
+            chartsDisplay.classList.add('hidden');
+            
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ city })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentWeatherData = result.data;
+                    displayWeather(result.data);
+                    displayCharts(result.data);
+                } else {
+                    weatherDisplay.innerHTML = `<p style="color:#ff0044;text-align:center;padding:40px;">${result.error}</p>`;
+                }
+            } catch (error) {
+                weatherDisplay.innerHTML = `<p style="color:#ff0044;text-align:center;padding:40px;">ERROR: ${error.message}</p>`;
+            }
+        }
+
+        function getWeatherIcon(weather) {
+            const icons = {
+                'clear': '☀️', 'clouds': '☁️', 'rain': '🌧️',
+                'drizzle': '🌦️', 'thunderstorm': '⛈️', 'snow': '❄️', 'mist': '🌫️'
+            };
+            return icons[weather.toLowerCase()] || '🌤️';
+        }
+
+        function displayWeather(data) {
+            const display = document.getElementById('weatherDisplay');
+            const current = data.current;
+            const icon = getWeatherIcon(current.weather);
+            
+            let aqiColor = '#00ff88';
+            if (current.aqi >= 4) aqiColor = '#ff0044';
+            else if (current.aqi >= 3) aqiColor = '#ffaa00';
+            
+            let html = `
+                <div class="dashboard-grid">
+                    <div class="data-card">
+                        <div class="card-header">
+                            <span class="card-icon">${icon}</span>
+                            <span class="card-title">Temperature</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="big-number">${current.temperature}°C</div>
+                            <div class="metric-label">Feels like ${current.feels_like}°C</div>
+                        </div>
+                    </div>
+                    
+                    <div class="data-card">
+                        <div class="card-header">
+                            <span class="card-icon">💧</span>
+                            <span class="card-title">Humidity</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="big-number">${current.humidity}%</div>
+                            <div class="metric-label">Moisture Level</div>
+                        </div>
+                    </div>
+                    
+                    <div class="data-card">
+                        <div class="card-header">
+                            <span class="card-icon">💨</span>
+                            <span class="card-title">Wind Speed</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="big-number">${current.wind_speed}</div>
+                            <div class="metric-label">m/s</div>
+                        </div>
+                    </div>
+                    
+                    <div class="data-card">
+                        <div class="card-header">
+                            <span class="card-icon">🌡️</span>
+                            <span class="card-title">Pressure</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="big-number">${current.pressure}</div>
+                            <div class="metric-label">hPa</div>
+                        </div>
+                    </div>
+                    
+                    <div class="data-card">
+                        <div class="card-header">
+                            <span class="card-icon">☁️</span>
+                            <span class="card-title">Cloud Cover</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="big-number">${current.clouds}%</div>
+                            <div class="metric-label">Cloudiness</div>
+                        </div>
+                    </div>
+                    
+                    <div class="data-card">
+                        <div class="card-header">
+                            <span class="card-icon">🏭</span>
+                            <span class="card-title">AQI Level</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="big-number" style="color:${aqiColor}">${current.aqi}</div>
+                            <div class="metric-label">${current.aqi_category}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            if (data.ml_predictions) {
+                const ml = data.ml_predictions;
+                html += `
+                    <div class="data-card" style="margin-top: 30px; padding: 30px; background: rgba(0, 255, 136, 0.05);">
+                        <div class="card-header">
+                            <span class="card-icon">🤖</span>
+                            <span class="card-title">ML Predictions</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; margin-top: 20px;">
+                            <div>
+                                <div style="font-size: 2.5em; font-weight: 700; color: #00ff88;">${ml.predicted_temperature}°C</div>
+                                <div class="metric-label">Predicted Temperature</div>
+                            </div>
+                            ${ml.predicted_humidity ? `
+                            <div>
+                                <div style="font-size: 2.5em; font-weight: 700; color: #00ffff;">${ml.predicted_humidity}%</div>
+                                <div class="metric-label">Predicted Humidity</div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            display.innerHTML = html;
+        }
+
+        function displayCharts(data) {
+            const chartsDisplay = document.getElementById('chartsDisplay');
+            chartsDisplay.classList.remove('hidden');
+            
+            const current = data.current;
+            
+            chartsDisplay.innerHTML = `
+                <div class="chart-grid">
+                    <div class="chart-card">
+                        <div class="card-header">
+                            <span class="card-icon">📊</span>
+                            <span class="card-title">Weather Metrics</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="metricsChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="card-header">
+                            <span class="card-icon">🔬</span>
+                            <span class="card-title">Air Quality</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="aqiChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card full">
+                        <div class="card-header">
+                            <span class="card-icon">📈</span>
+                            <span class="card-title">Real-time Analysis</span>
+                        </div>
+                        <div class="chart-container large">
+                            <canvas id="analysisChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                createMetricsChart(current);
+                createAQIChart(current);
+                createAnalysisChart(current);
+            }, 100);
+        }
+
+        function createMetricsChart(current) {
+            const ctx = document.getElementById('metricsChart');
+            if (!ctx) return;
+            
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Temperature', 'Humidity', 'Pressure', 'Wind', 'Clouds'],
+                    datasets: [{
+                        label: 'Current Metrics',
+                        data: [
+                            (current.temperature / 50) * 100,
+                            current.humidity,
+                            (current.pressure / 1100) * 100,
+                            (current.wind_speed / 20) * 100,
+                            current.clouds
+                        ],
+                        backgroundColor: 'rgba(0, 255, 136, 0.2)',
+                        borderColor: '#00ff88',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#00ff88',
+                        pointBorderColor: '#000',
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { color: '#00ff88', backdropColor: 'transparent' },
+                            grid: { color: 'rgba(0, 255, 136, 0.2)' },
+                            pointLabels: { color: '#00ff88', font: { size: 12 } }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#00ff88' } }
+                    }
+                }
+            });
+        }
+
+        function createAQIChart(current) {
+            const ctx = document.getElementById('aqiChart');
+            if (!ctx) return;
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['PM2.5', 'PM10', 'AQI Level'],
+                    datasets: [{
+                        data: [current.pm2_5, current.pm10, current.aqi * 20],
+                        backgroundColor: [
+                            'rgba(255, 0, 68, 0.7)',
+                            'rgba(255, 170, 0, 0.7)',
+                            'rgba(0, 255, 136, 0.7)'
+                        ],
+                        borderColor: ['#ff0044', '#ffaa00', '#00ff88'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#00ff88', padding: 15 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createAnalysisChart(current) {
+            const ctx = document.getElementById('analysisChart');
+            if (!ctx) return;
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'],
+                    datasets: [
+                        {
+                            label: 'Temperature Trend',
+                            data: [
+                                current.temperature - 3,
+                                current.temperature - 2,
+                                current.temperature - 1,
+                                current.temperature,
+                                current.temperature + 1,
+                                current.temperature,
+                                current.temperature - 1
+                            ],
+                            borderColor: '#00ff88',
+                            backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Humidity Trend',
+                            data: [
+                                current.humidity + 5,
+                                current.humidity + 3,
+                                current.humidity,
+                                current.humidity - 2,
+                                current.humidity,
+                                current.humidity + 3,
+                                current.humidity + 4
+                            ],
+                            borderColor: '#00ffff',
+                            backgroundColor: 'rgba(0, 255, 255, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            ticks: { color: '#00ff88' },
+                            grid: { color: 'rgba(0, 255, 136, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#00ff88' },
+                            grid: { color: 'rgba(0, 255, 136, 0.1)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#00ff88' } }
+                    }
+                }
+            });
+        }
+
+        document.getElementById('cityInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') searchWeather();
+        });
+    </script>
+</body>
+</html>
