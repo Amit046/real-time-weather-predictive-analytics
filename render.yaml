@@ -1,0 +1,17 @@
+ 
+services:
+  - type: web
+    name: skycast
+    runtime: python
+    pythonVersion: "3.11.0"
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: OPENWEATHER_API_KEY
+        value: 64b8b43dc8ca057f8fb88027536f43fe
+      - key: DEFAULT_CITY
+        value: Delhi
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: "False"
