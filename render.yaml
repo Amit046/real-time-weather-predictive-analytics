@@ -3,7 +3,7 @@ services:
   - type: web
     name: skycast
     runtime: python
-    pythonVersion: "3.11.0"
+    pythonVersion: "3.11"
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
     envVars:
