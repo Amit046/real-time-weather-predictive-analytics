@@ -19,6 +19,8 @@ This project goes beyond basic weather apps by focusing on **prediction, trend a
 - 📈 Trend forecasting & variability analysis  
 
 ---
+## clone git clone https://github.com/Amit046/real-time-weather-predictive-analytics.git
+---
 
 ## 🧠 Project Objective
 
