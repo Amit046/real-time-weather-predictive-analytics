@@ -7,7 +7,8 @@ This project goes beyond basic weather apps by focusing on **prediction, trend a
 ---
 
 <img width="1919" height="915" alt="image" src="https://github.com/user-attachments/assets/c0c67aef-08c8-44b1-9760-cae14cdbeb18" />
-
+---
+live link: https://skycast-vr38.onrender.com
 ---
 ## 🚀 Key Features
 
