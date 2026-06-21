@@ -1,6 +1,6 @@
 """
-Generate Sample Weather Data for Testing
-Creates realistic sample data if you don't want to wait for real API data
+Generate realistic sample weather data for ML training.
+Generates 1000 records with proper seasonal/daily variation.
 """
 
 import pandas as pd
@@ -9,124 +9,137 @@ from datetime import datetime, timedelta
 from config import Config
 import random
 
-def generate_sample_data(num_records=500):
-    """
-    Generate realistic sample weather data for training
-    
-    Args:
-        num_records: Number of sample records to generate
-    """
+random.seed(42)
+np.random.seed(42)
+
+CITY_PROFILES = {
+    'Delhi':     {'base_temp': 25, 'aqi_weights': [0.05, 0.15, 0.30, 0.35, 0.15]},
+    'Mumbai':    {'base_temp': 28, 'aqi_weights': [0.10, 0.30, 0.40, 0.15, 0.05]},
+    'Bangalore': {'base_temp': 22, 'aqi_weights': [0.30, 0.45, 0.20, 0.05, 0.00]},
+    'Chennai':   {'base_temp': 30, 'aqi_weights': [0.10, 0.35, 0.35, 0.15, 0.05]},
+    'Kolkata':   {'base_temp': 27, 'aqi_weights': [0.05, 0.15, 0.30, 0.35, 0.15]},
+    'Hyderabad': {'base_temp': 26, 'aqi_weights': [0.15, 0.35, 0.35, 0.10, 0.05]},
+    'Pune':      {'base_temp': 24, 'aqi_weights': [0.25, 0.45, 0.25, 0.05, 0.00]},
+    'Ahmedabad': {'base_temp': 28, 'aqi_weights': [0.10, 0.30, 0.35, 0.20, 0.05]},
+}
+
+WEATHER_TYPES = {
+    'Clear':       {'hum_range': (25, 55), 'cloud_range': (0, 15),  'prob': 0.22},
+    'Clouds':      {'hum_range': (45, 75), 'cloud_range': (40, 85), 'prob': 0.22},
+    'Rain':        {'hum_range': (75, 95), 'cloud_range': (85, 100),'prob': 0.17},
+    'Drizzle':     {'hum_range': (70, 90), 'cloud_range': (70, 95), 'prob': 0.12},
+    'Mist':        {'hum_range': (80, 95), 'cloud_range': (60, 90), 'prob': 0.12},
+    'Haze':        {'hum_range': (55, 80), 'cloud_range': (20, 60), 'prob': 0.10},
+    'Thunderstorm':{'hum_range': (80, 98), 'cloud_range': (90, 100),'prob': 0.05},
+}
+
+WEATHER_DESCS = {
+    'Clear':        ['clear sky', 'sunny'],
+    'Clouds':       ['few clouds', 'scattered clouds', 'broken clouds', 'overcast clouds'],
+    'Rain':         ['light rain', 'moderate rain', 'heavy intensity rain'],
+    'Drizzle':      ['light intensity drizzle', 'drizzle', 'heavy intensity drizzle'],
+    'Mist':         ['mist'],
+    'Haze':         ['haze'],
+    'Thunderstorm': ['thunderstorm with light rain', 'thunderstorm with rain',
+                     'thunderstorm with heavy rain'],
+}
+
+PM25_BY_AQI = {1: (5, 30), 2: (30, 60), 3: (60, 90), 4: (90, 150), 5: (150, 300)}
+
+
+def generate_sample_data(num_records: int = 1000) -> pd.DataFrame:
     Config.init_app()
-    
+
     print("=" * 60)
     print("🎲 GENERATING SAMPLE WEATHER DATA")
     print("=" * 60)
-    
-    cities = Config.CITIES
-    weather_conditions = ['Clear', 'Clouds', 'Rain', 'Drizzle', 'Mist', 'Haze']
-    weather_descriptions = {
-        'Clear': ['clear sky', 'sunny'],
-        'Clouds': ['few clouds', 'scattered clouds', 'broken clouds', 'overcast clouds'],
-        'Rain': ['light rain', 'moderate rain', 'heavy rain'],
-        'Drizzle': ['light drizzle', 'drizzle'],
-        'Mist': ['mist', 'fog'],
-        'Haze': ['haze', 'smoke']
-    }
-    
-    data = []
-    start_date = datetime.now() - timedelta(days=30)
-    
+
+    cities   = list(CITY_PROFILES.keys())
+    w_types  = list(WEATHER_TYPES.keys())
+    w_probs  = [WEATHER_TYPES[w]['prob'] for w in w_types]
+
+    data       = []
+    start_date = datetime.now() - timedelta(days=60)
+
     for i in range(num_records):
-        city = random.choice(cities)
-        timestamp = start_date + timedelta(hours=i)
-        
-        # Base temperature varies by city
-        base_temp = {
-            'Delhi': 25, 'Mumbai': 28, 'Bangalore': 23,
-            'Chennai': 30, 'Kolkata': 27, 'Hyderabad': 26,
-            'Pune': 24, 'Ahmedabad': 28
-        }.get(city, 25)
-        
-        # Add seasonal and daily variation
-        hour = timestamp.hour
-        temp_variation = np.sin((hour - 6) * np.pi / 12) * 5  # Daily cycle
-        temperature = base_temp + temp_variation + np.random.normal(0, 2)
-        
-        # Weather conditions affect other parameters
-        weather_main = random.choice(weather_conditions)
-        description = random.choice(weather_descriptions[weather_main])
-        
-        # Humidity (higher for rain, lower for clear)
-        if weather_main == 'Rain' or weather_main == 'Drizzle':
-            humidity = np.random.randint(70, 95)
-            clouds = np.random.randint(80, 100)
-        elif weather_main == 'Clear':
-            humidity = np.random.randint(30, 60)
-            clouds = np.random.randint(0, 20)
-        else:
-            humidity = np.random.randint(50, 80)
-            clouds = np.random.randint(40, 80)
-        
-        # AQI (varies by city - Delhi/Kolkata worse, Bangalore better)
-        if city in ['Delhi', 'Kolkata']:
-            aqi = np.random.choice([2, 3, 4, 5], p=[0.1, 0.3, 0.4, 0.2])
-        elif city in ['Bangalore', 'Pune']:
-            aqi = np.random.choice([1, 2, 3], p=[0.3, 0.5, 0.2])
-        else:
-            aqi = np.random.choice([2, 3, 4], p=[0.3, 0.5, 0.2])
-        
-        # PM2.5 based on AQI
-        pm2_5_ranges = {1: (0, 30), 2: (30, 60), 3: (60, 90), 4: (90, 120), 5: (120, 250)}
-        pm2_5 = np.random.uniform(*pm2_5_ranges[aqi])
-        pm10 = pm2_5 * 1.5 + np.random.normal(0, 10)
-        
+        city    = random.choice(cities)
+        profile = CITY_PROFILES[city]
+        ts      = start_date + timedelta(hours=i * (60 / (num_records / 24)))
+
+        hour  = ts.hour
+        month = ts.month
+
+        # Daily temperature cycle (peak ~14:00)
+        daily_cycle = np.sin((hour - 6) * np.pi / 12) * 5
+        # Seasonal cycle (India: hotter in May-Jun, cooler Dec-Jan)
+        seasonal    = np.sin((month - 3) * np.pi / 6) * 4
+        base_temp   = profile['base_temp'] + daily_cycle + seasonal
+        temperature = round(base_temp + np.random.normal(0, 1.5), 2)
+
+        weather_main = np.random.choice(w_types, p=w_probs)
+        wt           = WEATHER_TYPES[weather_main]
+        description  = random.choice(WEATHER_DESCS[weather_main])
+
+        humidity = int(np.clip(
+            np.random.randint(*wt['hum_range']) + np.random.normal(0, 3),
+            10, 100))
+        clouds   = int(np.clip(
+            np.random.randint(*wt['cloud_range']) + np.random.normal(0, 5),
+            0, 100))
+
+        aqi   = np.random.choice([1, 2, 3, 4, 5], p=profile['aqi_weights'])
+        pm2_5 = round(np.random.uniform(*PM25_BY_AQI[aqi]), 2)
+        pm10  = round(max(0, pm2_5 * 1.5 + np.random.normal(0, 8)), 2)
+
+        feels_offset = (humidity - 50) * 0.05 - (clouds * 0.02)
+        feels_like   = round(temperature + feels_offset + np.random.normal(0, 0.5), 2)
+        temp_min     = round(temperature - np.random.uniform(1.5, 3.5), 2)
+        temp_max     = round(temperature + np.random.uniform(1.5, 3.5), 2)
+
         record = {
-            'timestamp': timestamp,
-            'city': city,
-            'temperature': round(temperature, 2),
-            'feels_like': round(temperature + np.random.uniform(-2, 2), 2),
-            'temp_min': round(temperature - np.random.uniform(1, 3), 2),
-            'temp_max': round(temperature + np.random.uniform(1, 3), 2),
-            'pressure': int(1013 + np.random.normal(0, 10)),
-            'humidity': humidity,
-            'wind_speed': round(np.random.uniform(0.5, 8), 2),
-            'wind_deg': np.random.randint(0, 360),
-            'clouds': clouds,
-            'weather_main': weather_main,
+            'timestamp':           ts,
+            'city':                city,
+            'temperature':         temperature,
+            'feels_like':          feels_like,
+            'temp_min':            temp_min,
+            'temp_max':            temp_max,
+            'pressure':            int(1013 + np.random.normal(0, 8)),
+            'humidity':            humidity,
+            'wind_speed':          round(np.random.uniform(0.3, 9), 2),
+            'wind_deg':            np.random.randint(0, 360),
+            'clouds':              clouds,
+            'weather_main':        weather_main,
             'weather_description': description,
-            'aqi': aqi,
-            'pm2_5': round(pm2_5, 2),
-            'pm10': round(max(0, pm10), 2),
-            'co': round(np.random.uniform(200, 1000), 2),
-            'no2': round(np.random.uniform(10, 50), 2),
-            'o3': round(np.random.uniform(20, 100), 2),
-            'so2': round(np.random.uniform(5, 30), 2)
+            'aqi':                 int(aqi),
+            'pm2_5':               pm2_5,
+            'pm10':                pm10,
+            'co':  round(np.random.uniform(200, 1200), 2),
+            'no2': round(np.random.uniform(5,   80),   2),
+            'o3':  round(np.random.uniform(10,  120),  2),
+            'so2': round(np.random.uniform(2,   40),   2),
+            'hour':  hour,
+            'month': month,
         }
-        
         data.append(record)
-    
-    # Create DataFrame
+
     df = pd.DataFrame(data)
-    
-    # Save to CSV
     df.to_csv(Config.DATASET_FILE, index=False)
-    
-    print(f"\n✅ Generated {num_records} sample records!")
+
+    print(f"\n✅ Generated {num_records} records")
     print(f"📁 Saved to: {Config.DATASET_FILE}")
-    print(f"\n📊 Data Summary:")
-    print(f"   Cities: {df['city'].nunique()}")
-    print(f"   Date range: {df['timestamp'].min()} to {df['timestamp'].max()}")
-    print(f"   Temperature range: {df['temperature'].min():.1f}°C to {df['temperature'].max():.1f}°C")
-    print(f"   Weather conditions: {df['weather_main'].unique()}")
-    print(f"\n🚀 You can now train your ML models!")
+    print(f"\n📊 Summary:")
+    print(f"   Cities          : {df['city'].nunique()}")
+    print(f"   Date range      : {df['timestamp'].min().date()} → {df['timestamp'].max().date()}")
+    print(f"   Temp range      : {df['temperature'].min():.1f}°C – {df['temperature'].max():.1f}°C")
+    print(f"   Weather types   : {list(df['weather_main'].unique())}")
+    print(f"   AQI distribution: {df['aqi'].value_counts().sort_index().to_dict()}")
+    print(f"\n🚀 Now run: python train_model.py")
     print("=" * 60)
-    
     return df
 
+
 if __name__ == "__main__":
-    # Generate 500 sample records
-    df = generate_sample_data(num_records=500)
-    
-    # Show first few records
-    print("\n📋 Sample Data Preview:")
-    print(df.head(10))
+    df = generate_sample_data(num_records=1000)
+    print("\n📋 Preview:")
+    print(df[['timestamp', 'city', 'temperature', 'humidity',
+              'weather_main', 'aqi', 'pm2_5']].head(10).to_string(index=False))
