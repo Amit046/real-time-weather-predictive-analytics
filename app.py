@@ -69,10 +69,23 @@ def build_sample_response(city):
 
 
 # ── Routes ────────────────────────────────────────────────────────────────
+# @app.route('/')
+# def index():
+#     return render_template('index.html')
+
+# MAINTENANCE_MODE = True
+
+# @app.route('/')
+# def index():
+#     if MAINTENANCE_MODE:
+#         return render_template("maintenance.html")
+
+#     return render_template("index.html")
+
+
 @app.route('/')
 def index():
-    return render_template('index.html')
-
+    return "<!DOCTYPE html><html><head></head><body></body></html>"
 
 @app.route('/dashboard')
 def dashboard():
